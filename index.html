@@ -38,6 +38,10 @@ nav{gap:34px}header{min-height:80px}.home-heading{padding:60px 0 32px;display:fl
 .home-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 @media(max-width:950px){.home-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:620px){.home-grid{grid-template-columns:1fr}}
+
+/* Light tiles keep the supplied dark logos legible. */
+.tool-icon-box{background:#e9ebe7;border-color:#d5d9d1}
+.tool-monogram{color:#41483e}
 </style>
 </head>
 <body>
@@ -63,16 +67,49 @@ const CONFIG = {
   // 짧은 소개를 추가하려면 아래 따옴표 안에 입력하세요. 줄바꿈은 \n 입니다.
   about:'',
   // 기존 작품 설명에 적어 주신 툴입니다. 이름을 추가하거나 수정할 수 있습니다.
-  // icon에 'images/tools/zbrush.png'처럼 아이콘 경로를 넣으면 아래 카드에 표시됩니다.
+  // 기존 images 폴더 안의 icon 폴더에 아래 파일명 그대로 넣으세요.
   tools:[
-    {name:'ZBrush',short:'ZB',icon:''},
-    {name:'Marmoset Toolbag',short:'MT',icon:''},
-    {name:'Substance 3D Painter',short:'SP',icon:''},
-    {name:'Substance 3D Designer',short:'SD',icon:''},
-    {name:'Photoshop',short:'Ps',icon:''},
-    {name:'Unity',short:'U',icon:''},
-    {name:'Unreal Engine 5',short:'UE5',icon:''}
-  ],
+    {
+        "name": "3ds Max",
+        "short": "3D",
+        "icon": "images/icon/autodesk_3ds_max icon.png"
+    },
+    {
+        "name": "ZBrush",
+        "short": "ZB",
+        "icon": "images/icon/Zbrush icon.png"
+    },
+    {
+        "name": "Marmoset Toolbag",
+        "short": "MT",
+        "icon": "images/icon/marmoset icon.png"
+    },
+    {
+        "name": "Substance 3D Painter",
+        "short": "SP",
+        "icon": "images/icon/substance painter icon.png"
+    },
+    {
+        "name": "Substance 3D Designer",
+        "short": "SD",
+        "icon": "images/icon/adobe-substance-3d-designer-icon.png"
+    },
+    {
+        "name": "Photoshop",
+        "short": "Ps",
+        "icon": "images/icon/adobe-photoshop-icon.png"
+    },
+    {
+        "name": "Unity",
+        "short": "U",
+        "icon": "images/icon/unity-game-engine-icon.png"
+    },
+    {
+        "name": "Unreal Engine 5",
+        "short": "UE5",
+        "icon": "images/icon/unreal-engine-icon.png"
+    }
+],
   email:'chunkbin@naver.com',
   careers:[/* { company:'회사명', period:'2024 — 2026', description:'담당 업무' } */],
   projectOverrides:{
@@ -101,7 +138,7 @@ function classify(path){const p=path.split('/')[1]?.toLowerCase()||'';return /pr
 function source(path){return 'https://raw.githubusercontent.com/'+[CONFIG.owner,CONFIG.repo,CONFIG.branch].map(encodeURIComponent).join('/')+'/'+path.split('/').map(encodeURIComponent).join('/')}
 function makeProjects(paths){
  const groups=new Map();
- for(const path of paths){if(!path.startsWith(CONFIG.imageRoot+'/')||!/\.(png|jpe?g|webp|gif|avif)$/i.test(path))continue;
+ for(const path of paths){if(!path.startsWith(CONFIG.imageRoot+'/')||/^icons?$/i.test(path.split('/')[1]||'')||!/\.(png|jpe?g|webp|gif|avif)$/i.test(path))continue;
  const parts=path.split('/');const folder=parts.length>3?parts.slice(0,3).join('/'):parts.slice(0,-1).join('/');
  if(!groups.has(folder))groups.set(folder,[]);groups.get(folder).push(path)}
  const result=[...groups].map(([id,files])=>{files.sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));const o=CONFIG.projectOverrides[id]||{};
