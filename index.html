@@ -42,6 +42,12 @@ nav{gap:34px}header{min-height:80px}.home-heading{padding:60px 0 32px;display:fl
 /* Light tiles keep the supplied dark logos legible. */
 .tool-icon-box{background:#e9ebe7;border-color:#d5d9d1}
 .tool-monogram{color:#41483e}
+
+/* Keep panning inside the viewer; suppress browser image dragging. */
+.image-viewport{inset:14px;user-select:none;-webkit-user-select:none;-webkit-user-drag:none}
+.image-viewport *, .thumb, .thumb img{user-select:none;-webkit-user-select:none;-webkit-user-drag:none}
+.icon:disabled{opacity:.25;cursor:default}
+@media(max-width:620px){.image-viewport{inset:5px}}
 </style>
 </head>
 <body>
@@ -112,12 +118,46 @@ const CONFIG = {
 ],
   email:'chunkbin@naver.com',
   careers:[/* { company:'회사명', period:'2024 — 2026', description:'담당 업무' } */],
+  // ===== 작품 이름 · 설명 · 날짜 수정하는 곳 =====
+  // 앞으로 모든 작품의 수정 항목은 이 projectOverrides 안에 모아 둡니다.
+  // title: 화면에 표시할 작품 이름 / description: 작품 설명 (줄바꿈은 \n)
+  // publishedAt: 실제 공개일 YYYY-MM-DD. 비우면 표시 날짜는 폴더명에서 가져옵니다.
+  // GitHub 폴더를 추가하면 이미지는 자동으로 나타납니다.
+  // 이름·설명을 수정하려면 아래 예시를 복사해 이 목록 안에 추가하세요.
+  // 각 작품 항목 사이에는 쉼표(,)를 넣고, 폴더 경로와 대소문자를 맞춰 주세요.
+  // 예시 (주석을 제거하고 실제 폴더명으로 바꾸세요):
+  // "images/Personal/261101_NewWork": {
+  //   "title": "새 작품 이름",
+  //   "description": "작품 설명",
+  //   "publishedAt": ""
+  // },
   projectOverrides:{
-    'images/Personal/260318_Radio':{title:'Radio',description:'이곳에 작품 설명과 사용한 도구를 입력하세요.',publishedAt:''},
-    'images/Personal/260415_Tile1':{title:'Tile 01',description:'Zbrush, Marmoset toolbag, Substance 3D Painter',publishedAt:''},
-    'images/Personal/260516_Tile2':{title:'Tile 02',description:'이곳에 작품 설명을 입력하세요.',publishedAt:''},
-    'images/Personal/260902_Pillar':{title:'Pillar',description:'이곳에 작품 설명을 입력하세요.',publishedAt:''}
-  },
+    "images/Personal/260318_Radio": {
+        "title": "Radio",
+        "description": "3DS Max, Marmoset toolbag, Substance 3D Painter, Photoshop",
+        "publishedAt": "2026-09-27 ~ 2026-03-18"
+    },
+    "images/Personal/260415_Tile1": {
+        "title": "Tile 01",
+        "description": "Zbrush, Marmoset toolbag, Substance 3D Painter, Photoshop",
+        "publishedAt": "2026-02-21 ~ 2026-04-15"
+    },
+    "images/Personal/260516_Tile2": {
+        "title": "Tile 02",
+        "description": "Zbrush, Marmoset toolbag, Substance 3D Painter, Photoshop",
+        "publishedAt": "2026-04-08 ~ 2026-05-16"
+    },
+    "images/Personal/260902_Pillar": {
+        "title": "Pillar",
+        "description": "Zbrush, Marmoset toolbag, Substance 3D Painter, Photoshop",
+        "publishedAt": "2026-05-16 ~ 2026-09-02"
+    },
+    "images/Personal/261003_Rock1": {
+        "title": "Rock 01",
+        "description": "Zbrush, Marmoset toolbag, Substance 3D Painter, Photoshop",
+        "publishedAt": "2026-08-01 ~ 2026-10-03"
+    }
+},
   videos:[/* {id:'sketch-video-1',title:'영상 작품',category:'sketch',youtubeId:'유튜브_11자리_ID',description:'영상 설명',publishedAt:'2026-10-06'} */]
 };
 // 현재 공개 저장소에서 확인한 이미지. API 연결이 안 되어도 이 목록으로 표시합니다.
@@ -146,7 +186,7 @@ function makeProjects(paths){
  for(const v of CONFIG.videos){if(!/^[\w-]{11}$/.test(v.youtubeId))continue;result.push({...v,images:[{id:v.id,type:'youtube',src:'https://www.youtube-nocookie.com/embed/'+v.youtubeId,thumb:'https://i.ytimg.com/vi/'+v.youtubeId+'/hqdefault.jpg'}]})}
  return result.sort((a,b)=>b.id.localeCompare(a.id,undefined,{numeric:true}));
 }
-function safeImage(src,alt,lazy=true){const i=el('img');i.src=src;i.alt=alt;i.loading=lazy?'lazy':'eager';i.decoding='async';i.addEventListener('error',()=>{i.classList.add('broken');i.alt=alt+' — 이미지를 불러오지 못했습니다.'},{once:true});return i}
+function safeImage(src,alt,lazy=true){const i=el('img');i.draggable=false;i.src=src;i.alt=alt;i.loading=lazy?'lazy':'eager';i.decoding='async';i.addEventListener('error',()=>{i.classList.add('broken');i.alt=alt+' — 이미지를 불러오지 못했습니다.'},{once:true});return i}
 function recent(p){if(!/^\d{4}-\d{2}-\d{2}$/.test(p.publishedAt||''))return false;const age=Date.now()-Date.parse(p.publishedAt+'T00:00:00+09:00');return age>=0&&age<30*864e5}
 function flatten(items){return items.flatMap(p=>p.images.map(image=>({project:p,image})))}
 function toast(message){const t=$('#toast');t.textContent=message;t.hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>t.hidden=true,2200)}
@@ -202,7 +242,13 @@ function renderListing(){
 }
 function navigate(page,fromHash=false){if(!LABELS[page])page='home';currentPage=page;query='';if(!fromHash&&location.hash!=='#'+page)history.pushState(null,'','#'+page);render();window.scrollTo(0,0)}
 function render(){observer?.disconnect();main.replaceChildren();document.querySelectorAll('#nav button').forEach(b=>{b.classList.toggle('active',b.dataset.nav===currentPage);if(b.dataset.nav===currentPage)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});currentPage==='about'?renderAbout():renderListing()}
-function openProject(p){openItems(flatten([p]),0,false)}
+let viewerProjects=[],viewerProjectIndex=0,wheelLast=0,wheelTotal=0,wheelStamp=0;
+function openProject(p){
+ viewerProjects=projects.filter(x=>x.category==='personal'&&x.images.length);
+ if(!viewerProjects.some(x=>x.id===p.id))viewerProjects=[p];
+ viewerProjectIndex=viewerProjects.findIndex(x=>x.id===p.id);
+ wheelLast=-Infinity;wheelTotal=0;wheelStamp=0;openItems(flatten([p]),0);
+}
 function openItems(items,index){if(!items.length)return;originFocus=document.activeElement;pool=items;position=Math.max(0,index);document.body.style.overflow='hidden';dialog.showModal();renderViewer();$('#close').focus()}
 let zoom=1,panX=0,panY=0,zoomViewport=null,zoomImage=null,zoomLabel=null,drag=null,zoomTimer=null;
 function clampPan(){
@@ -221,39 +267,72 @@ function setZoom(value,point=null,animated=true){
  if(point&&zoomViewport){const r=zoomViewport.getBoundingClientRect(),x=point.x-r.left-r.width/2,y=point.y-r.top-r.height/2;panX=x-(x-panX)*zoom/old;panY=y-(y-panY)*zoom/old}
  if(zoom===1){panX=0;panY=0}paintZoom(animated);
 }
-function toggleZoom(){setZoom(zoom>1?1:2)}
+function toggleZoom(){setZoom(zoom>1?1:3)}
 function resetZoom(){zoom=1;panX=0;panY=0;drag=null;zoomViewport=null;zoomImage=null;zoomLabel=null;clearTimeout(zoomTimer)}
 function installZoom(stage,image,title){
  const vp=el('div','image-viewport');vp.tabIndex=0;vp.setAttribute('role','button');
  const img=safeImage(image.src,title,false);img.draggable=false;vp.append(img);stage.prepend(vp);zoomViewport=vp;zoomImage=img;
- const controls=el('div','zoom-controls');controls.setAttribute('aria-label','이미지 확대 도구');
- const minus=el('button','','−'),plus=el('button','','+'),fit=el('button','fit','원래 크기');minus.setAttribute('aria-label','이미지 축소');plus.setAttribute('aria-label','이미지 확대');
- zoomLabel=el('output','','100%');minus.onclick=()=>setZoom(zoom-.5);plus.onclick=()=>setZoom(zoom+.5);fit.onclick=()=>setZoom(1);controls.append(minus,zoomLabel,plus,fit);stage.append(controls);
  img.addEventListener('load',()=>paintZoom());
  vp.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();toggleZoom()}});
- vp.addEventListener('pointerdown',e=>{if(e.button!==0||!e.isPrimary)return;vp.focus({preventScroll:true});vp.setPointerCapture(e.pointerId);drag={id:e.pointerId,x:e.clientX,y:e.clientY,px:panX,py:panY,moved:false,wasZoomed:zoom>1};vp.classList.add('dragging');vp.classList.remove('animating')});
- vp.addEventListener('pointermove',e=>{if(!drag||drag.id!==e.pointerId)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.hypot(dx,dy)>6)drag.moved=true;if(drag.wasZoomed){panX=drag.px+dx;panY=drag.py+dy;paintZoom(false)}});
- vp.addEventListener('pointerup',e=>{if(!drag||drag.id!==e.pointerId)return;const d=drag;drag=null;vp.classList.remove('dragging');if(vp.hasPointerCapture(e.pointerId))vp.releasePointerCapture(e.pointerId);
- if(!d.moved){if(zoom>1)setZoom(1);else setZoom(2,{x:e.clientX,y:e.clientY})}
- else if(!d.wasZoomed&&e.pointerType==='touch'){const dx=e.clientX-d.x,dy=e.clientY-d.y;if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5)move(dx<0?1:-1)}});
+ vp.addEventListener('pointerdown',e=>{
+  if(e.button!==0||!e.isPrimary)return;e.preventDefault();vp.focus({preventScroll:true});vp.setPointerCapture(e.pointerId);
+  drag={id:e.pointerId,x:e.clientX,y:e.clientY,px:panX,py:panY,moved:false,wasZoomed:zoom>1};
+  vp.classList.add('dragging');vp.classList.remove('animating');
+ });
+ vp.addEventListener('pointermove',e=>{
+  if(!drag||drag.id!==e.pointerId)return;e.preventDefault();const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+  if(Math.hypot(dx,dy)>4)drag.moved=true;
+  if(drag.wasZoomed&&drag.moved){panX=drag.px+dx;panY=drag.py+dy;paintZoom(false)}
+ });
+ vp.addEventListener('pointerup',e=>{
+  if(!drag||drag.id!==e.pointerId)return;e.preventDefault();const d=drag,dx=e.clientX-d.x,dy=e.clientY-d.y;
+  const moved=d.moved||Math.hypot(dx,dy)>4;drag=null;vp.classList.remove('dragging');
+  if(vp.hasPointerCapture(e.pointerId))vp.releasePointerCapture(e.pointerId);
+  if(!moved){if(zoom>1)setZoom(1);else setZoom(3,{x:e.clientX,y:e.clientY})}
+  else if(!d.wasZoomed&&e.pointerType==='touch'&&Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5)move(dx<0?1:-1);
+ });
  const cancel=()=>{drag=null;vp.classList.remove('dragging')};vp.addEventListener('pointercancel',cancel);vp.addEventListener('lostpointercapture',cancel);
- vp.addEventListener('wheel',e=>{e.preventDefault();setZoom(zoom*Math.exp(-e.deltaY*.002),{x:e.clientX,y:e.clientY},false)},{passive:false});paintZoom();
+ vp.addEventListener('dragstart',e=>e.preventDefault());
+ vp.addEventListener('click',e=>{e.preventDefault();e.stopPropagation()});
+ paintZoom();
 }
 function renderViewer(){
+ const refocusImage=document.activeElement===zoomViewport;
  resetZoom();const {project:p,image}=pool[position];$('#viewerTitle').textContent=p.title;$('#viewerCount').textContent=(position+1)+' / '+pool.length;
- $('#viewerCategory').textContent='PROJECT / '+p.title;$('#viewerDescription').textContent=p.description||'';$('#viewerDate').textContent=displayDate(p);$('#viewerHint').textContent='이미지 클릭: 확대 · 드래그: 이동\n휠 또는 +/−: 배율 조절\n방향키: 이 작품의 이전·다음 사진';
+ $('#viewerCategory').textContent='PROJECT / '+p.title;$('#viewerDescription').textContent=p.description||'';$('#viewerDate').textContent=displayDate(p);$('#viewerHint').textContent='클릭: 확대 / 축소\n휠: 다음 장 이동';
  const stage=$('#stage');stage.querySelectorAll('.image-viewport,.zoom-controls,iframe,.video-wheel').forEach(e=>e.remove());
  if(image.type==='youtube'){const iframe=el('iframe');iframe.title=p.title;iframe.src=image.src;iframe.allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture';iframe.allowFullscreen=true;stage.prepend(iframe)}else installZoom(stage,image,p.title);
  const thumbs=$('#thumbs');thumbs.replaceChildren();pool.forEach((item,i)=>{const b=el('button','thumb'+(i===position?' selected':''));b.setAttribute('aria-label',item.project.title+' 사진 '+(i+1));b.setAttribute('aria-pressed',String(i===position));b.append(safeImage(item.image.thumb||item.image.src,item.project.title));b.onclick=()=>{position=i;renderViewer();$('#thumbs').children[i]?.focus({preventScroll:true})};thumbs.append(b)});
- $('#prev').disabled=$('#next').disabled=pool.length<2;$('#prev').hidden=$('#next').hidden=pool.length<2;
+ $('#prev').hidden=$('#next').hidden=false;$('#prev').disabled=position===0&&viewerProjectIndex===0;$('#next').disabled=position===pool.length-1&&viewerProjectIndex===viewerProjects.length-1;
+ if(refocusImage)zoomViewport?.focus({preventScroll:true});
 }
-function move(dir){if(pool.length<2)return;position=(position+dir+pool.length)%pool.length;renderViewer();}
+function move(dir){
+ if(drag||!pool.length)return;
+ const next=position+dir;
+ if(next>=0&&next<pool.length){position=next;renderViewer();return}
+ const adjacent=viewerProjectIndex+dir;
+ if(adjacent<0||adjacent>=viewerProjects.length)return;
+ viewerProjectIndex=adjacent;pool=flatten([viewerProjects[adjacent]]);
+ position=dir>0?0:pool.length-1;renderViewer();
+}
+function handleGalleryWheel(e){
+ if(e.ctrlKey)return;e.preventDefault();if(drag)return;
+ const now=performance.now();if(now-wheelStamp>180)wheelTotal=0;wheelStamp=now;
+ if(now-wheelLast<400)return;
+ const delta=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?600:1);
+ if(!delta)return;if(wheelTotal&&Math.sign(delta)!==Math.sign(wheelTotal))wheelTotal=0;
+ wheelTotal+=delta;if(Math.abs(wheelTotal)<40)return;
+ const dir=wheelTotal>0?1:-1;wheelTotal=0;wheelLast=now;move(dir);
+}
+$('#stage').addEventListener('wheel',handleGalleryWheel,{passive:false});
+// Prevent native browser drag previews, including thumbnail images.
+dialog.addEventListener('dragstart',e=>e.preventDefault());
 function closeViewer(){dialog.close()}
 $('#close').onclick=closeViewer;
 dialog.addEventListener('cancel',e=>{if(zoom>1){e.preventDefault();setZoom(1)}});
 dialog.addEventListener('close',()=>{resetZoom();document.body.style.overflow='';$('#stage').querySelectorAll('iframe').forEach(e=>e.remove());originFocus?.focus({preventScroll:true})});
 $('#prev').onclick=()=>move(-1);$('#next').onclick=()=>move(1);
-dialog.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();move(e.key==='ArrowRight'?1:-1)}else if((e.key==='+'||e.key==='=')&&zoomViewport){e.preventDefault();setZoom(zoom+.5)}else if(e.key==='-'&&zoomViewport){e.preventDefault();setZoom(zoom-.5)}});
+dialog.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();move(e.key==='ArrowRight'?1:-1)}});
 window.addEventListener('resize',()=>paintZoom());
 window.addEventListener('popstate',()=>{if(dialog.open)dialog.close();navigate(location.hash.slice(1)||'home',true)});
 $('#brand').textContent=CONFIG.name;document.title=CONFIG.name+' — Portfolio';MENUS.forEach(([id,label])=>{const b=el('button','',label);b.dataset.nav=id;b.onclick=()=>navigate(id);$('#nav').append(b)});document.querySelector('.brand').onclick=()=>navigate('home');
