@@ -48,6 +48,16 @@ nav{gap:34px}header{min-height:80px}.home-heading{padding:60px 0 32px;display:fl
 .image-viewport *, .thumb, .thumb img{user-select:none;-webkit-user-select:none;-webkit-user-drag:none}
 .icon:disabled{opacity:.25;cursor:default}
 @media(max-width:620px){.image-viewport{inset:5px}}
+
+/* Small reserved portrait next to the About details. */
+.profile-row{display:flex;gap:28px;align-items:center}
+.profile-photo{width:120px;height:144px;flex:0 0 120px;overflow:hidden;border-radius:5px;background:var(--panel)}
+.profile-photo.is-empty{display:grid;place-items:center;border:1px dashed var(--line)}
+.profile-photo-label{font-size:10px;letter-spacing:2px;color:var(--muted);opacity:.6}
+.profile-photo img{display:block;width:100%;height:100%;object-fit:cover;object-position:center}
+.profile-details{min-width:0}.profile-details .profile-email{overflow-wrap:anywhere}
+@media(max-width:620px){.profile-row{gap:18px}.profile-photo{width:92px;height:112px;flex-basis:92px}.profile-details h1{font-size:22px}}
+@media(max-width:360px){.profile-row{align-items:flex-start;flex-direction:column}}
 </style>
 </head>
 <body>
@@ -67,6 +77,9 @@ nav{gap:34px}header{min-height:80px}.home-heading{padding:60px 0 32px;display:fl
 const CONFIG = {
   owner:'chunkbin123', repo:'chunkbin123', branch:'main', imageRoot:'images',
   name:'chunkbin', role:'Environment Artist',
+  // 프로필 사진 경로. 사진 업로드 후 예: 'images/profile.jpg'
+  // 빈칸이면 사진 자리만 표시합니다.
+  profilePhoto:'',
   // Home 상단: 영상이 없으면 사이트 이름만 표시합니다.
   // GitHub에 영상을 올린 뒤 src에 'videos/showreel.mp4'처럼 경로를 넣으세요.
   heroVideo:{src:'',poster:''},
@@ -211,9 +224,14 @@ function card(p){
 }
 function renderAbout(){
  const section=el('section','profile-page');
- const identity=el('section','profile-section profile-identity');identity.append(el('p','profile-label','ABOUT'),el('h1','',CONFIG.name),el('p','profile-role',CONFIG.role));
- if(CONFIG.email){const email=el('button','profile-email',CONFIG.email);email.title='클릭하여 이메일 복사';email.setAttribute('aria-label',CONFIG.email+' 이메일 주소 복사');email.onclick=copyEmail;identity.append(email)}
- if(CONFIG.about?.trim())identity.append(el('p','profile-bio',CONFIG.about));
+ const identity=el('section','profile-section profile-identity');identity.append(el('p','profile-label','ABOUT'));
+ const profileRow=el('div','profile-row'),photo=el('div','profile-photo'),details=el('div','profile-details');
+ const photoPlaceholder=()=>{photo.replaceChildren(el('span','profile-photo-label','PHOTO'));photo.classList.add('is-empty');photo.setAttribute('role','img');photo.setAttribute('aria-label','프로필 사진 자리')};
+ if(CONFIG.profilePhoto){const img=el('img');img.src=CONFIG.profilePhoto;img.alt=CONFIG.name+' 프로필 사진';img.decoding='async';img.addEventListener('error',photoPlaceholder,{once:true});photo.append(img)}else photoPlaceholder();
+ details.append(el('h1','',CONFIG.name),el('p','profile-role',CONFIG.role));
+ profileRow.append(photo,details);identity.append(profileRow);
+ if(CONFIG.email){const email=el('button','profile-email',CONFIG.email);email.title='클릭하여 이메일 복사';email.setAttribute('aria-label',CONFIG.email+' 이메일 주소 복사');email.onclick=copyEmail;details.append(email)}
+ if(CONFIG.about?.trim())details.append(el('p','profile-bio',CONFIG.about));
  const tools=Array.isArray(CONFIG.tools)?CONFIG.tools:[];
  const icons=el('section','profile-section');icons.append(el('h2','profile-label','TOOLS'));const row=el('div','tool-icons');
  tools.forEach(tool=>{const figure=el('figure','tool-icon'),box=el('div','tool-icon-box');const fallback=()=>{box.replaceChildren(el('span','tool-monogram',tool.short||tool.name.slice(0,2).toUpperCase()))};
